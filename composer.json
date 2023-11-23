@@ -1,0 +1,36 @@
+{
+    "name": "acidwave/laravel-sso",
+    "description": "Simple PHP SSO integration for Laravel",
+    "keywords": [
+        "laravel",
+        "sso",
+        "authentication",
+        "login"
+    ],
+    "homepage": "https://github.com/acidwave/laravel-sso",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Timur Akmalov",
+            "email": "me@acidwave.ru",
+            "homepage": "https://github.com/acidwave",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "laravel/framework": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AcidWave\\LaravelSSO\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AcidWave\\LaravelSSO\\SSOServiceProvider"
+            ]
+        }
+    }
+}
