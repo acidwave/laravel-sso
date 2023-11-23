@@ -3,8 +3,11 @@
 namespace AcidWave\LaravelSSO;
 
 use Illuminate\Support\Str;
+use Illuminate\Routing\Redirector;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cookie;
 use AcidWave\LaravelSSO\Traits\ApiResponser;
 use AcidWave\LaravelSSO\Exceptions\MissingConfigurationException;
@@ -74,13 +77,13 @@ class LaravelSSOBroker
      *
      * @param string $command Request command name.
      * @param string $returnUrl Return URL
-     * @return void
+     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
      */
-    public function redirectRequest(string $command, string $returnUrl)
+    public function redirectRequest(string $command, string $returnUrl) : Redirector | RedirectResponse
     {
         $this->saveReturnUrl($returnUrl);
         $parameters = $this->makeParameters($command, ['return_url' => config('app.url') . route('auth-callback', [], false)]);
-        $this->redirect($this->generateCommandUrl($command, $parameters));
+        return $this->redirect($this->generateCommandUrl($command, $parameters));
     }
 
     /**
@@ -90,7 +93,8 @@ class LaravelSSOBroker
      * @param array $parameters Parameters for URL query string
      * @return array
      */
-    protected function makeParameters(string $command = 'api/sso/v1/check', array $parameters = []) : array {
+    protected function makeParameters(string $command = 'api/sso/v1/check', array $parameters = []) : array 
+    {
         $this->saveToken();
         $defaultParameters = [
             'broker' => $this->brokerName,
@@ -108,7 +112,8 @@ class LaravelSSOBroker
      * @param string $hash Received hash
      * @return boolean
      */
-    public function checkResponse(array $parameters, string $hash) : bool {
+    public function checkResponse(array $parameters, string $hash) : bool 
+    {
         $this->saveToken();
         return Hash::check(implode($parameters) . $this->token . $this->brokerSecret, $hash);
     }
@@ -120,9 +125,9 @@ class LaravelSSOBroker
      * @param string $command Request command name.
      * @param array $parameters Parameters for URL query string if GET request and form parameters if it's POST request.
      *
-     * @return Illuminate\Http\Client\Response
+     * @return \Illuminate\Http\Client\Response
      */
-    public function makeRequest(string $command, string $method = 'post', array $parameters = [])
+    public function makeRequest(string $command, string $method = 'post', array $parameters = []) : Response
     {
         $parameters = $this->makeParameters($command, $parameters);
         $commandUrl = $this->generateCommandUrl($command);
@@ -140,7 +145,7 @@ class LaravelSSOBroker
      *
      * @return string
      */
-    protected function generateCommandUrl(string $command, array $parameters = [])
+    protected function generateCommandUrl(string $command, array $parameters = []) : string
     {
         $query = '';
         if (!empty($parameters)) {
@@ -157,9 +162,9 @@ class LaravelSSOBroker
      * @param array $parameters HTTP query string.
      * @param int $httpResponseCode HTTP response code for redirection.
      *
-     * @return void
+     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
      */
-    protected function redirect(string $url, array $parameters = [], int $httpResponseCode = 307)
+    protected function redirect(string $url, array $parameters = [], int $httpResponseCode = 307) : Redirector | RedirectResponse
     {
         $query = '';
         // Making URL query string if parameters given.
@@ -172,8 +177,7 @@ class LaravelSSOBroker
 
             $query .= http_build_query($parameters);
         }
-
-        app()->abort($httpResponseCode, '', ['Location' => $url . $query]);
+        return redirect()->away($url . $query, $httpResponseCode)->withCookies(Cookie::getQueuedCookies());
     }
 
     /**
@@ -181,7 +185,7 @@ class LaravelSSOBroker
      *
      * @return string
      */
-    protected function getCookieName()
+    protected function getCookieName() : string
     {
         // Cookie name based on broker's name because there can be some brokers on same domain
         // and we need to prevent duplications.
@@ -193,7 +197,7 @@ class LaravelSSOBroker
      *
      * @return void
      */
-    protected function saveToken()
+    protected function saveToken() : void
     {
         if (isset($this->token) && $this->token) {
             return;
@@ -202,10 +206,10 @@ class LaravelSSOBroker
         if ($this->token = Cookie::get($this->getCookieName(), null)) {
             return;
         }
-
+//dd($this->token);
         // If cookie token doesn't exist, we need to create it with unique token...
         $this->token = Str::random(40);
-        Cookie::queue($this->getCookieName(), $this->token, 60);
+        Cookie::queue(Cookie::make($this->getCookieName(), $this->token, 60));
     }
     /**
      * Save return url to cookie
@@ -213,12 +217,8 @@ class LaravelSSOBroker
      * @param string $url Return URL
      * @return void
      */
-    protected function saveReturnUrl(string $url)
+    protected function saveReturnUrl(string $url) : void
     {
-        /* $parsedUrl = parse_url($url);
-        $url = (isset($parsedUrl['path']) ? '?' . $parsedUrl['path'] : '')
-              .(isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '')
-              .(isset($parsedUrl['fragment']) ? '#' . $parsedUrl['fragment'] : ''); */
         Cookie::queue(Cookie::make($this->getCookieName() . '_url', $url, 60));
     }
     /**
@@ -228,7 +228,7 @@ class LaravelSSOBroker
      */
     public function getReturnUrl(): string
     {
-        return Cookie::get($this->getCookieName() . '_url', '/');
+        return Cookie::get($this->getCookieName() . '_url', config('app.url') . '/');
     }
 
     /**
@@ -236,7 +236,7 @@ class LaravelSSOBroker
      *
      * @return void
      */
-    public function deleteToken()
+    public function deleteToken() : void
     {
         $this->token = null;
         Cookie::expire($this->getCookieName());

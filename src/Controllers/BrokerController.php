@@ -5,9 +5,10 @@ namespace AcidWave\LaravelSSO\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Redirector;
 use Illuminate\Http\RedirectResponse;
-use AcidWave\LaravelSSO\LaravelSSOBroker;
 use Illuminate\Support\Facades\Cookie;
+use AcidWave\LaravelSSO\LaravelSSOBroker;
 use AcidWave\LaravelSSO\Traits\ApiResponser;
 use AcidWave\LaravelSSO\Requests\CheckAuthRequest;
 use Illuminate\Routing\Controller as BaseController;
@@ -64,19 +65,19 @@ class BrokerController extends BaseController
         }
     }
 
-    function login(Request $request): void
+    function login(Request $request) : Redirector | RedirectResponse
     {
         $ssoHelper = new LaravelSSOBroker($request->bearerToken() ?? '');
-        $ssoHelper->redirectRequest('login', $request->header('referer', '/'));
+        return $ssoHelper->redirectRequest('login', $request->header('referer', '/'));
     }
 
-    function logout(Request $request): void
+    function logout(Request $request) : Redirector | RedirectResponse
     {
         $ssoHelper = new LaravelSSOBroker($request->bearerToken() ?? '');
-        $ssoHelper->redirectRequest('logout', $request->header('referer', '/'));
+        return $ssoHelper->redirectRequest('logout', $request->header('referer', '/'));
     }
 
-    function authCallback(CheckAuthRequest $request): JsonResponse | RedirectResponse
+    function authCallback(CheckAuthRequest $request): JsonResponse | Redirector | RedirectResponse
     {
         $authInfo = $request->validated();
         $authInfo['authorization'] = $authInfo['authorization'] ?? '';
@@ -87,7 +88,7 @@ class BrokerController extends BaseController
         if (!$verified) {
             return $request->expectsJson()
                 ? $this->errorResponse(['return_url' => $return_url], Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS)
-                : redirect($return_url);
+                : redirect($return_url)->withCookies(Cookie::getQueuedCookies());
         } elseif ($authInfo['status'] == 'authorized') {
             return $request->expectsJson()
                 ? $this->successResponse(
@@ -95,11 +96,11 @@ class BrokerController extends BaseController
                     Response::HTTP_OK,
                     ['Authorization' => $authInfo['authorization']]
                 )
-                : redirect($return_url)->withHeaders(['Authorization' => $authInfo['authorization']]);
+                : redirect($return_url)->withHeaders(['Authorization' => $authInfo['authorization']])->withCookies(Cookie::getQueuedCookies());
         } else {
             return $request->expectsJson()
                 ? $this->errorResponse(['return_url' => $return_url], Response::HTTP_UNAUTHORIZED)
-                : redirect($return_url);
+                : redirect($return_url)->withCookies(Cookie::getQueuedCookies());
         }
     }
 }
