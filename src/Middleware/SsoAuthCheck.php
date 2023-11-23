@@ -5,7 +5,7 @@ namespace AcidWave\LaravelSSO\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
-use AcidWave\LaravelSSO\Controllers\SsoController;
+use AcidWave\LaravelSSO\LaravelSSOBroker;
 
 class SsoAuthCheck
 {
@@ -22,7 +22,7 @@ class SsoAuthCheck
         $header_token = $request->bearerToken();
         $nextRequest = $next($request);
         if ($header_token) {
-            $sso = new SsoController($header_token);
+            $sso = new LaravelSSOBroker($header_token);
             $response = $sso->makeRequest('api/sso/v1/check');
             if ($response->getStatusCode() !== 200) {
                 Cookie::expire('authorization', '/', '.dev.acidwave.ru');
@@ -30,7 +30,7 @@ class SsoAuthCheck
                 $nextRequest->header('Authorization', '');
             }
         } elseif ($cookie_token) {
-            $sso = new SsoController($cookie_token);
+            $sso = new LaravelSSOBroker($cookie_token);
             $response = $sso->makeRequest('api/sso/v1/check');
             if ($response->getStatusCode() !== 200) {
                 Cookie::expire('authorization', '/', '.dev.acidwave.ru');
