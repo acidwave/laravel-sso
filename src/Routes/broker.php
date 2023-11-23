@@ -15,8 +15,8 @@ use AcidWave\LaravelSSO\Controllers\BrokerController;
 */
 
 Route::group([
-    'prefix' => 'auth/v1',
-    'middleware' => ['api']
+    'middleware' => 'api',
+    'prefix' => 'api/auth/v1',
 ], function () {
     Route::post('login', [BrokerController::class, 'login'])->name('auth.login');
     Route::get('refresh', [BrokerController::class, 'refresh'])->name('auth.refresh');

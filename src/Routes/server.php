@@ -8,8 +8,8 @@ use Acidwave\LaravelSSO\Controllers\ServerController;
  */
 
 Route::group([
-    'prefix' => 'sso/v1',
-    'middleware' => ['api']
+    'middleware' => 'api',
+    'prefix' => 'api/sso/v1',
 ], function () {
     Route::post('broker', [ServerController::class, 'broker']);
     Route::post('check', [ServerController::class, 'check']);
