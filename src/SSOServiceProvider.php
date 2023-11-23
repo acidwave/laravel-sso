@@ -1,8 +1,8 @@
 <?php
 
-namespace Acidwave\LaravelSSO;
+namespace AcidWave\LaravelSSO;
 
-use Acidwave\LaravelSSO\Commands;
+use AcidWave\LaravelSSO\Commands;
 use Illuminate\Support\ServiceProvider;
 
 class SSOServiceProvider extends ServiceProvider
