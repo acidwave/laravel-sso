@@ -4,10 +4,8 @@ namespace AcidWave\LaravelSSO\Controllers;
 
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
-use AcidWave\LaravelSSO\Models\Broker;
 use Illuminate\Support\Facades\Cookie;
 use AcidWave\LaravelSSO\Traits\ApiResponser;
-use AcidWave\LaravelSSO\Resources\UserResource;
 use Acidwave\LaravelSSO\Requests\CheckBrokerRequest;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -24,7 +22,7 @@ class ServerController extends BaseController
     public function broker(CheckBrokerRequest $request)
     {
         $brokerInfo = $request->validated();
-        $broker = Broker::firstWhere('name', $brokerInfo['broker']);
+        $broker = config('laravel-sso.brokersModel')::firstWhere('name', $brokerInfo['broker']);
         if (!$broker) 
             return $this->errorResponse('Wrong broker', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         if (Hash::check($brokerInfo['command'] . $brokerInfo['token'] . $broker->secret, $brokerInfo['hash'])) {
@@ -38,7 +36,7 @@ class ServerController extends BaseController
     public function check(CheckBrokerRequest $request)
     {
         $brokerInfo = $request->validated();
-        $broker = Broker::firstWhere('name', $brokerInfo['broker']);
+        $broker = config('laravel-sso.brokersModel')::firstWhere('name', $brokerInfo['broker']);
         if (!$broker) 
             return $this->errorResponse('Wrong broker', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         if (Hash::check($brokerInfo['command'] . $brokerInfo['token'] . $broker->secret, $brokerInfo['hash'])) {
@@ -57,16 +55,17 @@ class ServerController extends BaseController
     public function me(CheckBrokerRequest $request)
     {
         $brokerInfo = $request->validated();
-        $broker = Broker::firstWhere('name', $brokerInfo['broker']);
+        $broker = config('laravel-sso.brokersModel')::firstWhere('name', $brokerInfo['broker']);
         if (!$broker) 
             return $this->errorResponse('Wrong broker', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         if (Hash::check($brokerInfo['command'] . $brokerInfo['token'] . $broker->secret, $brokerInfo['hash'])) {
             $user = $request->user();
             if ($user) {
+                $config = $this->getConfig('laravel-sso');
                 $status = 'ok';
                 $hash = Hash::make($status . $brokerInfo['token'] . $broker->secret);
                 return $this->successResponse([
-                    'user' => new UserResource($user),
+                    'user' => new $config['userResource']($user),
                     'status' => $status,
                     'hash' => $hash,
                 ], Response::HTTP_OK, ['Authorization' => $request->bearerToken()]);
@@ -85,7 +84,7 @@ class ServerController extends BaseController
     public function refresh(CheckBrokerRequest $request)
     {
         $brokerInfo = $request->validated();
-        $broker = Broker::firstWhere('name', $brokerInfo['broker']);
+        $broker = config('laravel-sso.brokersModel')::firstWhere('name', $brokerInfo['broker']);
         if (!$broker) 
             return $this->errorResponse('Wrong broker', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         if (Hash::check($brokerInfo['command'] . $brokerInfo['token'] . $broker->secret, $brokerInfo['hash'])) {
@@ -93,8 +92,8 @@ class ServerController extends BaseController
             if ($user) {
                 $status = 'ok';
                 $hash = Hash::make($status . $brokerInfo['token'] . $broker->secret);
-                Cookie::queue(Cookie::make('username', $user->name, 0, '/', '.dev.acidwave.ru'));
-                Cookie::queue(Cookie::make('authorization', $request->bearerToken(), 0, '/', '.dev.acidwave.ru', true, false));
+                Cookie::queue(Cookie::make('username', $user->name, 0, '/', config('laravel-sso.domain')));
+                Cookie::queue(Cookie::make('authorization', $request->bearerToken(), 0, '/', config('laravel-sso.domain'), true, false));
                 return $this->successResponse([
                     'status' => $status,
                     'hash' => $hash,
@@ -110,7 +109,7 @@ class ServerController extends BaseController
     public function logout(CheckBrokerRequest $request)
     {
         $brokerInfo = $request->validated();
-        $broker = Broker::firstWhere('name', $brokerInfo['broker']);
+        $broker = config('laravel-sso.brokersModel')::firstWhere('name', $brokerInfo['broker']);
         if (!$broker) 
             return $this->errorResponse('Wrong broker', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         if (Hash::check($brokerInfo['command'] . $brokerInfo['token'] . $broker->secret, $brokerInfo['hash'])) {

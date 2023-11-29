@@ -44,7 +44,10 @@ This is necessary because we need cookies to work in API routes.
     \Illuminate\Routing\Middleware\SubstituteBindings::class,
 ],
 ```
-
+Set new option in your `.env` file:
+```shell
+SSO_SESSION_DOMAIN=
+```
 
 Now you should create brokers.
 You can create new broker using following Artisan CLI command:
@@ -72,11 +75,12 @@ Change `type` value in `config/laravel-sso.php` file from `server`
 
  
 
-Set 3 new options in your `.env` file:
+Set 4 new options in your `.env` file:
 ```shell
 SSO_SERVER_URL=
 SSO_BROKER_NAME=
 SSO_BROKER_SECRET=
+SSO_SESSION_DOMAIN=
 SSO_TYPE=broker
 ```
 `SSO_SERVER_URL` is your server's http url without trailing slash. `SSO_BROKER_NAME` and `SSO_BROKER_SECRET` must be data which exists in your server's `brokers` table.
@@ -105,6 +109,7 @@ Example `.env` options:
 SSO_SERVER_URL=https://server.test
 SSO_BROKER_NAME=site1
 SSO_BROKER_SECRET=892asjdajsdksja74jh38kljk2929023
+SSO_SESSION_DOMAIN=".server.test"
 SSO_USERNAME_FIELD=email
 SSO_TYPE=broker
 ```

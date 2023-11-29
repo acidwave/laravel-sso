@@ -33,13 +33,13 @@ class BrokerController extends BaseController
             if (!$ssoHelper->checkResponse([$response['status']], $response['hash']))
                 return $this->errorResponse('Wrong hash', Response::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
             $user = $response['user'];
-            Cookie::queue(Cookie::make('username', $user['name'], 0, '/', '.dev.acidwave.ru'));
-            Cookie::queue(Cookie::make('authorization', $ssoResponse->header('Authorization'), 0, '/', '.dev.acidwave.ru', true, false));
+            Cookie::queue(Cookie::make('username', $user['name'], 0, '/', config('laravel-sso.domain')));
+            Cookie::queue(Cookie::make('authorization', $ssoResponse->header('Authorization'), 0, '/', config('laravel-sso.domain'), true, false));
             return $this->successResponse($user, Response::HTTP_OK, ['Authorization' => $ssoResponse->header('Authorization')]);
         } else {
             $error = "User not found";
-            Cookie::expire('authorization', '/', '.dev.acidwave.ru');
-            Cookie::expire('username', '/', '.dev.acidwave.ru');
+            Cookie::expire('authorization', '/', config('laravel-sso.domain'));
+            Cookie::expire('username', '/', config('laravel-sso.domain'));
             return $this->errorResponse($error, Response::HTTP_UNAUTHORIZED);
         }
     }

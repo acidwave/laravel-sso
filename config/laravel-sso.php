@@ -25,7 +25,7 @@ return [
 
     'usersModel' => \App\Models\User::class,
     'brokersModel' => AcidWave\LaravelSSO\Models\Broker::class,
-    
+    'userResource' => \AcidWave\LaravelSSO\Resources\UserResource::class,
 
     // Table used in Acidwave\LaravelSSO\Models\Broker model
     'brokersTable' => 'brokers',
@@ -38,6 +38,9 @@ return [
         // Return array field name => database column name
         'id' => 'id',
     ],
+
+    // Domain for exchange data between server and brokers
+    'domain' => env('SSO_SESSION_DOMAIN', 'SESSION_DOMAIN'),
 
     /*
      |--------------------------------------------------------------------------

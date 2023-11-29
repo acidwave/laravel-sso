@@ -32,8 +32,8 @@ class SsoAuthCheck
         $response = $ssoBroker->makeRequest('api/sso/v1/check');
 
         if ($response->getStatusCode() !== 200 || !$ssoBroker->checkResponse([$response->json('data')['status']], $response->json('data')['hash'])) {
-            Cookie::expire('authorization', '/', '.dev.acidwave.ru');
-            Cookie::expire('username', '/', '.dev.acidwave.ru');
+            Cookie::expire('authorization', '/', config('laravel-sso.domain'));
+            Cookie::expire('username', '/', config('laravel-sso.domain'));
             $nextRequest->header('Authorization', '');
         } else {
             $nextRequest->header('Authorization', 'Bearer ' . $cookie_token);

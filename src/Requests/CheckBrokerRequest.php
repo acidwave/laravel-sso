@@ -23,9 +23,9 @@ class CheckBrokerRequest extends FormRequest
      */
     public function rules()
     {
-        
+        $config = $this->getConfig('laravel-sso');
         return [
-            'broker' => ['required', 'string', 'exists:App\Models\Broker,name'],
+            'broker' => ['required', 'string', "exists:{$config['brokersModel']},name"],
             'token' => ['required', 'string'],
             'hash' => ['required', 'string'],
             'return_url' => ['sometimes', 'url'],
